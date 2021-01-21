@@ -31,10 +31,18 @@
 
 class WebServer;
 
+static const char serverIndex[] PROGMEM =
+  R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
+                  <input type='file' name='update'>
+                  <input type='submit' value='Update'>
+               </form>
+         </body></html>)";
+static const char successResponse[] PROGMEM = 
+  "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\n";
+
 class HTTPUpdateServer
 {
   public:
-    HTTPUpdateServer(bool serial_debug=false);
 
     void setup(WebServer *server)
     {
@@ -51,38 +59,13 @@ class HTTPUpdateServer
       setup(server, "/update", username, password);
     }
 
-    void setup(WebServer *server, const String& path, const String& username, const String& password);
-
     void updateCredentials(const String& username, const String& password)
     {
       _username = username;
       _password = password;
     }
 
-  protected:
-    void _setUpdaterError();
-
-  private:
-    bool _serial_output;
-    WebServer *_server;
-    String _username;
-    String _password;
-    bool _authenticated;
-    String _updaterError;
-};
-
-/////////////////////////////////////////////////////////////////////////////////
-
-static const char serverIndex[] PROGMEM =
-  R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
-                  <input type='file' name='update'>
-                  <input type='submit' value='Update'>
-               </form>
-         </body></html>)";
-static const char successResponse[] PROGMEM = 
-  "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\n";
-
-HTTPUpdateServer::HTTPUpdateServer(bool serial_debug)
+    HTTPUpdateServer(bool serial_debug)
 {
   _serial_output = serial_debug;
   _server = NULL;
@@ -91,7 +74,7 @@ HTTPUpdateServer::HTTPUpdateServer(bool serial_debug)
   _authenticated = false;
 }
 
-void HTTPUpdateServer::setup(WebServer *server, const String& path, const String& username, const String& password)
+void setup(WebServer *server, const String& path, const String& username, const String& password)
 {
     _server = server;
     _username = username;
@@ -162,13 +145,30 @@ void HTTPUpdateServer::setup(WebServer *server, const String& path, const String
     });
 }
 
-void HTTPUpdateServer::_setUpdaterError()
+
+
+  protected:
+    void _setUpdaterError()
 {
   if (_serial_output) Update.printError(Serial);
   StreamString str;
   Update.printError(str);
   _updaterError = str.c_str();
 }
+
+  private:
+    bool _serial_output;
+    WebServer *_server;
+    String _username;
+    String _password;
+    bool _authenticated;
+    String _updaterError;
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 #endif
 
